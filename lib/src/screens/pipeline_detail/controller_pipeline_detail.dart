@@ -18,7 +18,8 @@ class _PipelineDetailController with ShareMixin, AdsMixin, ApiErrorHelper {
 
   Pipeline get pipeline => buildDetail.value!.data!.pipeline;
 
-  Set<String> get _manualApprovalIds => buildDetail.value?.data?.timeline
+  Set<String> get _manualApprovalIds =>
+      buildDetail.value?.data?.timeline
           .where((record) => record.type == 'Task' && record.task?.name == 'ManualValidation')
           .map((record) => record.identifier)
           .whereType<String>()
@@ -46,6 +47,7 @@ class _PipelineDetailController with ShareMixin, AdsMixin, ApiErrorHelper {
   List<Approval> get pendingApprovals {
     return _stageApprovals.where((a) => a.isPending).toList();
   }
+
   bool get hasPendingApprovals => pendingApprovals.isNotEmpty;
 
   bool get hasApprovals => _stageApprovals.isNotEmpty;
@@ -336,7 +338,9 @@ class _PipelineDetailController with ShareMixin, AdsMixin, ApiErrorHelper {
         final message = res.errorResponse == null ? 'Try again' : getErrorMessage(res.errorResponse!);
         await OverlayService.error(
           'Manual validation not ${resume ? 'resumed' : 'rejected'}',
-          description: message.isEmpty ? 'It may have timed out or you may not have permission. Refresh and try again.' : message,
+          description: message.isEmpty
+              ? 'It may have timed out or you may not have permission. Refresh and try again.'
+              : message,
         );
         return;
       }

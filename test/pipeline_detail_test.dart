@@ -61,6 +61,8 @@ void main() {
       expect(find.text('Stage approval'), findsNothing);
       expect(find.text('Defer'), findsNothing);
 
+      await tester.ensureVisible(find.text('Resume'));
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.tap(find.text('Resume'));
       await tester.pump(const Duration(milliseconds: 400));
       await tester.tap(find.text('Confirm'));
@@ -69,6 +71,9 @@ void main() {
       expect(api.resumedIds, ['validation-id']);
       expect(api.pipelineRequests, greaterThan(1));
       expect(find.text('1 manual validation awaiting review'), findsNothing);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pump(const Duration(seconds: 4));
     });
   }
 
@@ -84,10 +89,17 @@ void main() {
 
   testWidgets('Banner includes manual tasks outside the displayed timeline order', (tester) async {
     final api = _ValidationApi(version: 0);
-    api.timeline.add(_record(
-      'Second validation', 'Task', 1001,
-      parentId: 'job', identifier: 'second-id', taskName: 'ManualValidation', version: 1,
-    ));
+    api.timeline.add(
+      _record(
+        'Second validation',
+        'Task',
+        1001,
+        parentId: 'job',
+        identifier: 'second-id',
+        taskName: 'ManualValidation',
+        version: 1,
+      ),
+    );
     api.approvals.addAll([_approval('validation-id'), _approval('second-id', instructions: 'Check second release')]);
     await tester.pumpWidget(_app(api));
     await tester.pump();
@@ -141,6 +153,8 @@ void main() {
 
     await tester.tap(find.text('View'));
     await tester.pump(const Duration(milliseconds: 400));
+    await tester.ensureVisible(find.text('Reject'));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.text('Reject'));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.text('Confirm'));
@@ -148,6 +162,9 @@ void main() {
 
     expect(api.rejectedIds, ['validation-id']);
     expect(find.text('1 manual validation awaiting review'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 4));
   });
 
   testWidgets('Server denial keeps the validation pending', (tester) async {
@@ -157,6 +174,8 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.text('View'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.ensureVisible(find.text('Resume'));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.text('Resume'));
     await tester.pump(const Duration(milliseconds: 400));
@@ -188,8 +207,10 @@ Approval _approval(String id, {String instructions = '', String? blockedDescript
   'id': id,
   'status': 'pending',
   'instructions': instructions,
-  'pipeline': {'owner': {'id': 1234}},
-  'steps': [],
+  'pipeline': {
+    'owner': {'id': 1234},
+  },
+  'steps': <Object>[],
   'blockedApprovers': [
     if (blockedDescriptor != null) {'descriptor': blockedDescriptor},
   ],
@@ -205,22 +226,22 @@ Record _record(
   int version = 0,
   String state = 'inProgress',
 }) => Record.fromJson({
-      'id': id,
-      'type': type,
-      'name': id,
-      'order': order,
-      'parentId': parentId,
-      'identifier': identifier,
-      'state': state,
-      'result': null,
-      'task': taskName == null ? null : {'id': 'task-definition', 'name': taskName, 'version': '$version.0.0'},
-      'previousAttempts': [],
-      'changeId': 1,
-      'lastModified': '2026-09-27T12:00:00Z',
-      'errorCount': 0,
-      'warningCount': 0,
-      'attempt': 1,
-    });
+  'id': id,
+  'type': type,
+  'name': id,
+  'order': order,
+  'parentId': parentId,
+  'identifier': identifier,
+  'state': state,
+  'result': null,
+  'task': taskName == null ? null : {'id': 'task-definition', 'name': taskName, 'version': '$version.0.0'},
+  'previousAttempts': <Object>[],
+  'changeId': 1,
+  'lastModified': '2026-09-27T12:00:00Z',
+  'errorCount': 0,
+  'warningCount': 0,
+  'attempt': 1,
+});
 
 class _ValidationApi extends AzureApiServiceMock {
   _ValidationApi({required int version, String identifier = 'validation-id'})
